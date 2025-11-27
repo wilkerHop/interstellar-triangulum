@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "title": "Digital Artisan Demo Video",
+    "resolution": "1920x1080",
+    "fps": 60,
+    "duration": 10.0,
+    "description": "A simple demonstration of the video engine based on The Digital Artisan's three pillars"
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "duration": 3.0,
+      "layers": [
+        {
+          "type": "image",
+          "source": "assets/background.png",
+          "transform": {
+            "position": { "x": 0, "y": 0 },
+            "scale": 1.0,
+            "opacity": 1.0
+          }
+        },
+        {
+          "type": "text",
+          "content": "The Digital Artisan",
+          "font": "assets/font.ttf",
+          "font_size": 72.0,
+          "color": { "r": 255, "g": 255, "b": 255, "a": 255 },
+          "position": { "x": 960, "y": 440 },
+          "effects": ["fade_in"]
+        },
+        {
+          "type": "text",
+          "content": "Building Videos with Rust",
+          "font": "assets/font.ttf",
+          "font_size": 48.0,
+          "color": { "r": 200, "g": 200, "b": 200, "a": 255 },
+          "position": { "x": 960, "y": 600 }
+        }
+      ],
+      "transition": {
+        "fade": { "duration": 0.5 }
+      }
+    },
+    {
+      "id": "bridge",
+      "duration": 5.0,
+      "layers": [
+        {
+          "type": "image",
+          "source": "assets/pipeline.png",
+          "transform": {
+            "position": { "x": 0, "y": 0 },
+            "scale": 1.0,
+            "opacity": 1.0
+          }
+        },
+        {
+          "type": "text",
+          "content": "The Rendering Pipeline",
+          "font": "assets/font.ttf",
+          "font_size": 56.0,
+          "color": { "r": 74, "g": 158, "b": 255, "a": 255 },
+          "position": { "x": 960, "y": 100 }
+        }
+      ]
+    },
+    {
+      "id": "payoff",
+      "duration": 2.0,
+      "layers": [
+        {
+          "type": "image",
+          "source": "assets/result.png"
+        },
+        {
+          "type": "text",
+          "content": "Fast. Engaging. Trustworthy.",
+          "font": "assets/font.ttf",
+          "font_size": 64.0,
+          "color": { "r": 38, "g": 222, "b": 129, "a": 255 },
+          "position": { "x": 960, "y": 900 },
+          "effects": ["fade_in"]
+        }
+      ]
+    }
+  ],
+  "audio": {
+    "tracks": [
+      {
+        "source": "assets/music.mp3",
+        "track_type": "music",
+        "volume": 0.7,
+        "start_time": 0.0
+      },
+      {
+        "source": "assets/voiceover.mp3",
+        "track_type": "voiceover",
+        "volume": 1.0,
+        "start_time": 0.5
+      }
+    ]
+  }
+}
