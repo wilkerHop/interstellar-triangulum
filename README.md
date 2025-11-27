@@ -1,6 +1,6 @@
 # Interstellar Triangulum
 
-[![CI](https://github.com/YOUR_USERNAME/interstellar-triangulum/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/interstellar-triangulum/actions)
+[![CI](https://github.com/wilkerHop/interstellar-triangulum/workflows/CI/badge.svg)](https://github.com/wilkerHop/interstellar-triangulum/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 A Rust-based video creation engine implementing the three pillars from [The Digital Artisan](https://wilkerhop.github.io/the-digital-artisan/):
