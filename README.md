@@ -1,4 +1,7 @@
-# Video Engine - Digital Artisan PoC
+# Interstellar Triangulum
+
+[![CI](https://github.com/YOUR_USERNAME/interstellar-triangulum/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/interstellar-triangulum/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 A Rust-based video creation engine implementing the three pillars from [The Digital Artisan](https://wilkerhop.github.io/the-digital-artisan/):
 
@@ -6,7 +9,7 @@ A Rust-based video creation engine implementing the three pillars from [The Digi
 2. **📈 Viral Narrative** - Retention-optimized script structure
 3. **⚖️ Faithful Discourse** - Rhetorical integrity and credibility
 
-## Project Status
+## Quick Start
 
 ✅ **Phase 1: Foundation (In Progress)**
 - ✅ Project setup with Cargo
@@ -215,18 +218,29 @@ Based on The Digital Artisan benchmarks:
 - **Memory**: < 4GB for typical projects
 - **Rust advantage**: 10x+ faster than Python (moviepy)
 
-## Contributing
+## Project Structure
 
-This is a Proof-of-Concept implementation. Future enhancements:
-- Complete FFmpeg integration
-- GPU-accelerated effects pipeline
-- CLI with rich progress indicators
-- Web-based script editor
-- Real-time preview
-
-## License
-
-MIT
+```
+interstellar-triangulum/
+├── .github/
+│   └── workflows/
+│       └── ci.yml         # CI/CD pipeline
+├── src/
+│   ├── lib.rs             # Library exports
+│   ├── main.rs            # Demo application
+│   ├── script.rs          # Data structures + tests
+│   ├── parser.rs          # JSON parsing + tests
+│   └── assets.rs          # Asset loading + tests
+├── examples/
+│   ├── simple.json        # Example video script
+│   └── assets/            # Example assets
+├── scripts/
+│   └── check_test_coverage.sh  # Health check script
+├── Cargo.toml             # Dependencies
+├── LICENSE                # MIT License
+├── README.md              # This file
+└── CONTRIBUTING.md        # Contribution guidelines
+```
 
 ---
 

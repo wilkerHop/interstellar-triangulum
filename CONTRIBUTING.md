@@ -221,21 +221,25 @@ The health check enforces our testing rule:
 ## Project Structure
 
 ```
-video_engine/
+interstellar-triangulum/
+├── .github/
+│   └── workflows/
+│       └── ci.yml         # CI/CD pipeline
 ├── src/
-│   ├── lib.rs          # Library exports
-│   ├── main.rs         # Demo application
-│   ├── script.rs       # Data structures + tests
-│   ├── parser.rs       # JSON parsing + tests
-│   └── assets.rs       # Asset loading + tests
+│   ├── lib.rs             # Library exports
+│   ├── main.rs            # Demo application
+│   ├── script.rs          # Data structures + tests
+│   ├── parser.rs          # JSON parsing + tests
+│   └── assets.rs          # Asset loading + tests
 ├── examples/
-│   ├── simple.json     # Example video script
-│   └── assets/         # Example assets
+│   ├── simple.json        # Example video script
+│   └── assets/            # Example assets
 ├── scripts/
 │   └── check_test_coverage.sh  # Health check script
-├── tests/              # Integration tests
-├── Cargo.toml          # Dependencies
-└── README.md           # Project documentation
+├── tests/                 # Integration tests
+├── Cargo.toml             # Dependencies
+├── LICENSE                # MIT License
+└── README.md              # Project documentation
 ```
 
 ---
