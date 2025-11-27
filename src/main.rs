@@ -1,6 +1,6 @@
 use anyhow::Result;
 use std::path::Path;
-use video_engine::{ScriptParser, AssetLoader};
+use interstellar_triangulum::{ScriptParser, AssetLoader};
 
 fn main() -> Result<()> {
     println!("🎬 Video Engine - Digital Artisan PoC\n");
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
         for scene in &script.scenes {
             for layer in &scene.layers {
                 match layer {
-                    video_engine::script::Layer::Image { source, .. } => {
+                    interstellar_triangulum::script::Layer::Image { source, .. } => {
                         match loader.load_image(source) {
                             Ok(img) => println!("  ✓ Loaded image: {} ({}x{})", 
                                 source.display(), img.width, img.height),
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
                                 source.display(), e),
                         }
                     }
-                    video_engine::script::Layer::Video { source, .. } => {
+                    interstellar_triangulum::script::Layer::Video { source, .. } => {
                         match loader.load_video(source) {
                             Ok(vid) => println!("  ✓ Loaded video: {} ({}x{}@{}fps)", 
                                 source.display(), vid.width, vid.height, vid.fps),
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
                                 source.display(), e),
                         }
                     }
-                    video_engine::script::Layer::Text { font, .. } => {
+                    interstellar_triangulum::script::Layer::Text { font, .. } => {
                         match loader.load_font(font) {
                             Ok(_) => println!("  ✓ Loaded font: {}", font.display()),
                             Err(e) => println!("  ✗ Failed to load font {}: {}", 
