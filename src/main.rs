@@ -63,7 +63,10 @@ fn main() -> Result<()> {
         println!("\n📊 Asset Statistics:");
         println!("  {}", loader.stats());
     } else {
-        println!("ℹ️  No example script found at {}", example_script.display());
+        println!(
+            "ℹ️  No example script found at {}",
+            example_script.display()
+        );
         println!("   Create an example script to test the engine.");
         println!("\n💡 See examples/simple.json for reference format");
     }
