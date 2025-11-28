@@ -115,44 +115,46 @@ impl AudioMixer {
 
     /// Mix all tracks into a single buffer
     pub fn mix(&self, duration_seconds: f32) -> Vec<f32> {
-        let total_samples =
-            (duration_seconds * self.output_sample_rate as f32) as usize * self.output_channels as usize;
+        let total_samples = (duration_seconds * self.output_sample_rate as f32) as usize
+            * self.output_channels as usize;
         let mut mixed_buffer = vec![0.0; total_samples];
 
         for track in &self.tracks {
             // Simple resampling (nearest neighbor) and mixing
             // NOTE: For production, use a proper resampler like `rubato`
-            
-            let start_sample = (track.start_time * self.output_sample_rate as f32) as usize * self.output_channels as usize;
-            
+
+            let start_sample = (track.start_time * self.output_sample_rate as f32) as usize
+                * self.output_channels as usize;
+
             // Ratio between track sample rate and output sample rate
             let rate_ratio = track.sample_rate as f32 / self.output_sample_rate as f32;
 
-            for i in 0..mixed_buffer.len() {
+            for (i, sample) in mixed_buffer.iter_mut().enumerate() {
                 if i < start_sample {
                     continue;
                 }
-                
+
                 let track_index = i - start_sample;
                 // Map output sample index to input sample index based on rate
                 // We process interleaved samples, so we need to be careful with channels
-                
+
                 let frame_index = track_index / self.output_channels as usize;
                 let channel_index = track_index % self.output_channels as usize;
-                
+
                 let input_frame_index = (frame_index as f32 * rate_ratio) as usize;
-                
+
                 // Handle channel mapping (mono to stereo, etc.)
                 let input_channel_index = if track.channels == 1 {
                     0 // Use the single channel for all output channels
                 } else {
                     channel_index % track.channels as usize
                 };
-                
-                let input_sample_index = input_frame_index * track.channels as usize + input_channel_index;
+
+                let input_sample_index =
+                    input_frame_index * track.channels as usize + input_channel_index;
 
                 if input_sample_index < track.samples.len() {
-                    mixed_buffer[i] += track.samples[input_sample_index] * track.volume;
+                    *sample += track.samples[input_sample_index] * track.volume;
                 }
             }
         }
@@ -174,11 +176,13 @@ impl AudioMixer {
             sample_format: hound::SampleFormat::Float,
         };
 
-        let mut writer = hound::WavWriter::create(path, spec)
-            .context("Failed to create WAV writer")?;
+        let mut writer =
+            hound::WavWriter::create(path, spec).context("Failed to create WAV writer")?;
 
         for &sample in samples {
-            writer.write_sample(sample).context("Failed to write sample")?;
+            writer
+                .write_sample(sample)
+                .context("Failed to write sample")?;
         }
 
         writer.finalize().context("Failed to finalize WAV file")?;

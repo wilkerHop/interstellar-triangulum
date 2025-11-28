@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         if let Some(audio_config) = &script.audio {
             println!("\n🎵 Processing audio...");
             let mut mixer = interstellar_triangulum::AudioMixer::new(44100, 2);
-            
+
             for track in &audio_config.tracks {
                 println!("  Loading track: {}", track.source.display());
                 // Resolve path relative to script
@@ -90,13 +90,7 @@ fn main() -> Result<()> {
 
                 match interstellar_triangulum::AudioDecoder::decode(&track_path) {
                     Ok((samples, rate, channels)) => {
-                        mixer.add_track(
-                            samples,
-                            rate,
-                            channels,
-                            track.start_time,
-                            track.volume,
-                        );
+                        mixer.add_track(samples, rate, channels, track.start_time, track.volume);
                     }
                     Err(e) => println!("  ⚠️  Failed to load audio track: {}", e),
                 }
@@ -116,7 +110,7 @@ fn main() -> Result<()> {
         if interstellar_triangulum::renderer::VideoEncoder::is_available() {
             let output_video = Path::new("output.mp4");
             let frame_pattern = output_dir.join("frame_%d.ppm");
-            
+
             interstellar_triangulum::renderer::VideoEncoder::encode(
                 frame_pattern.to_str().unwrap(),
                 output_video,
@@ -125,7 +119,7 @@ fn main() -> Result<()> {
                 script.metadata.resolution.dimensions().1,
                 audio_path_opt.as_deref(),
             )?;
-            
+
             println!("✨ Video created successfully: {}", output_video.display());
         } else {
             println!("⚠️  FFmpeg not found. Skipping video encoding.");
