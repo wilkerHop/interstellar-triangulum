@@ -5,8 +5,11 @@ use std::path::Path;
 fn main() -> Result<()> {
     println!("🎬 Video Engine - Digital Artisan PoC\n");
 
-    // Example: Parse a script file
-    let example_script = Path::new("examples/simple.json");
+    // Parse script file from args or use default
+    let args: Vec<String> = std::env::args().collect();
+    let default_path = "examples/simple.json".to_string();
+    let script_path = args.get(1).unwrap_or(&default_path);
+    let example_script = Path::new(script_path);
 
     if example_script.exists() {
         println!("Parsing script: {}", example_script.display());
@@ -57,6 +60,9 @@ fn main() -> Result<()> {
                         }
                     }
                 }
+            }
+        }
+
         // Render frames
         println!("\n🎬 Rendering frames...");
         let output_dir = Path::new("output");
@@ -64,8 +70,47 @@ fn main() -> Result<()> {
             std::fs::create_dir(output_dir)?;
         }
 
-        let engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
-        engine.render(output_dir)?;
+        let mut engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
+        engine.render(output_dir, &mut loader)?;
+
+        // Process Audio
+        let mut audio_path_opt = None;
+        if let Some(audio_config) = &script.audio {
+            println!("\n🎵 Processing audio...");
+            let mut mixer = interstellar_triangulum::AudioMixer::new(44100, 2);
+            
+            for track in &audio_config.tracks {
+                println!("  Loading track: {}", track.source.display());
+                // Resolve path relative to script
+                let track_path = if track.source.is_absolute() {
+                    track.source.clone()
+                } else {
+                    base_path.join(&track.source)
+                };
+
+                match interstellar_triangulum::AudioDecoder::decode(&track_path) {
+                    Ok((samples, rate, channels)) => {
+                        mixer.add_track(
+                            samples,
+                            rate,
+                            channels,
+                            track.start_time,
+                            track.volume,
+                        );
+                    }
+                    Err(e) => println!("  ⚠️  Failed to load audio track: {}", e),
+                }
+            }
+
+            let mixed_audio = mixer.mix(script.metadata.duration);
+            let output_audio = output_dir.join("audio.wav");
+            if let Err(e) = mixer.export(&output_audio, &mixed_audio) {
+                println!("  ⚠️  Failed to export mixed audio: {}", e);
+            } else {
+                println!("  ✓ Mixed audio exported to: {}", output_audio.display());
+                audio_path_opt = Some(output_audio);
+            }
+        }
 
         // Encode video if FFmpeg is available
         if interstellar_triangulum::renderer::VideoEncoder::is_available() {
@@ -78,6 +123,7 @@ fn main() -> Result<()> {
                 script.metadata.fps,
                 script.metadata.resolution.dimensions().0,
                 script.metadata.resolution.dimensions().1,
+                audio_path_opt.as_deref(),
             )?;
             
             println!("✨ Video created successfully: {}", output_video.display());
