@@ -87,10 +87,46 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install FFmpeg
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: Build
         run: cargo build --release --verbose
 
-      - name: Upload artifact
+      - name: Run Engine (Generate Video)
+        if: runner.os == 'Linux'
+        run: |
+          # Create a simple test script
+          echo '{
+            "metadata": {
+              "title": "CI Demo",
+              "resolution": "640x360",
+              "fps": 30,
+              "duration": 2.0
+            },
+            "scenes": [
+              {
+                "id": "scene1",
+                "duration": 2.0,
+                "layers": []
+              }
+            ]
+          }' > examples/ci_test.json
+          
+          # Run the engine
+          ./target/release/interstellar-triangulum
+          
+      - name: Upload Video Artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-video
+          path: output.mp4
+
+      - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: interstellar-triangulum-${{ matrix.os }}
