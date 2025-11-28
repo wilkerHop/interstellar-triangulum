@@ -57,7 +57,33 @@ fn main() -> Result<()> {
                         }
                     }
                 }
-            }
+        // Render frames
+        println!("\n🎬 Rendering frames...");
+        let output_dir = Path::new("output");
+        if !output_dir.exists() {
+            std::fs::create_dir(output_dir)?;
+        }
+
+        let engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
+        engine.render(output_dir)?;
+
+        // Encode video if FFmpeg is available
+        if interstellar_triangulum::renderer::VideoEncoder::is_available() {
+            let output_video = Path::new("output.mp4");
+            let frame_pattern = output_dir.join("frame_%d.ppm");
+            
+            interstellar_triangulum::renderer::VideoEncoder::encode(
+                frame_pattern.to_str().unwrap(),
+                output_video,
+                script.metadata.fps,
+                script.metadata.resolution.dimensions().0,
+                script.metadata.resolution.dimensions().1,
+            )?;
+            
+            println!("✨ Video created successfully: {}", output_video.display());
+        } else {
+            println!("⚠️  FFmpeg not found. Skipping video encoding.");
+            println!("   Frames are saved in: {}", output_dir.display());
         }
 
         println!("\n📊 Asset Statistics:");
