@@ -59,7 +59,7 @@ impl RenderEngine {
                 for layer in &layers {
                     self.render_layer(layer)?;
                 }
-                
+
                 // Flush GPU commands after rendering all layers
                 self.flush_gpu()?;
             }
@@ -83,7 +83,7 @@ impl RenderEngine {
                 // Placeholder: draw colored rectangle for image
                 let (x, y) = Compositor::apply_transform(0, 0, transform);
                 let color = [100, 100, 200, 255];
-                
+
                 if let Some(gpu) = &self.gpu_renderer {
                     gpu.fill_rect(&mut self.frame_buffer, x, y, 100, 100, color)?;
                 } else {
@@ -94,7 +94,7 @@ impl RenderEngine {
                 // Placeholder: draw colored rectangle for video
                 let (x, y) = Compositor::apply_transform(0, 0, transform);
                 let color = [200, 100, 100, 255];
-                
+
                 if let Some(gpu) = &self.gpu_renderer {
                     gpu.fill_rect(&mut self.frame_buffer, x, y, 100, 100, color)?;
                 } else {
@@ -208,7 +208,7 @@ mod tests {
         let script = create_test_script();
         let mut engine = RenderEngine::new(script);
         let mut asset_loader = AssetLoader::new(".");
-        
+
         // Should not panic even if GPU is not available (fallback to CPU)
         // If GPU is available, it exercises the flush() logic
         engine.render_frame(0, &mut asset_loader).unwrap();
