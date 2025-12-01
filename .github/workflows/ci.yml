@@ -87,17 +87,25 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install FFmpeg
+      - name: Install Linux Dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg libasound2-dev libudev-dev libxkbcommon-dev libwayland-dev
+
+      - name: Install macOS Dependencies
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+
+      - name: Install Windows Dependencies
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg
 
       - name: Build
         run: cargo build --release --verbose
 
       - name: Run Engine (Generate Video)
-        if: runner.os == 'Linux'
+        shell: bash
         run: |
           # Create a simple test script
           echo '{
@@ -120,7 +128,6 @@ jobs:
           ./target/release/interstellar-triangulum
           
       - name: Upload Video Artifact
-        if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
           name: demo-video

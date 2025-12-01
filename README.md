@@ -42,6 +42,25 @@ A Rust-based video creation engine implementing the three pillars from [The Digi
 - ⏳ Retention curve analysis
 - ⏳ Credibility scoring tools
 
+## Prerequisites
+
+To render videos, you must have **FFmpeg** installed on your system:
+
+### macOS
+```bash
+brew install ffmpeg
+```
+
+### Windows
+```bash
+choco install ffmpeg
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+sudo apt-get install ffmpeg libasound2-dev libudev-dev libxkbcommon-dev libwayland-dev
+```
+
 ## Quick Start
 
 ### Build the project
