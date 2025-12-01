@@ -178,39 +178,40 @@ impl GpuRenderer {
         }
 
         // Upload vertices to GPU
-        self.context.queue.write_buffer(
-            &self.vertex_buffer,
-            0,
-            bytemuck::cast_slice(&vertices),
-        );
+        self.context
+            .queue
+            .write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&vertices));
 
         let (width, height) = frame_buffer.dimensions();
 
         // Create output texture
-        let output_texture = self.context.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Output Texture"),
-            size: wgpu::Extent3d {
-                width,
-                height,
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-            view_formats: &[],
-        });
+        let output_texture = self
+            .context
+            .device
+            .create_texture(&wgpu::TextureDescriptor {
+                label: Some("Output Texture"),
+                size: wgpu::Extent3d {
+                    width,
+                    height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+                view_formats: &[],
+            });
 
         let view = output_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         // Create command encoder
-        let mut encoder = self
-            .context
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("Render Encoder"),
-            });
+        let mut encoder =
+            self.context
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("Render Encoder"),
+                });
 
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -269,21 +270,27 @@ impl GpuRenderer {
 
         // Read back to CPU using async/await
         let buffer_slice = staging_buffer.slice(..);
-        
+
         // Use pollster to block on async operation
         pollster::block_on(async {
             let (tx, rx) = std::sync::mpsc::channel();
             buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
                 tx.send(result).unwrap();
             });
-            self.context.device.poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None }).unwrap();
+            self.context
+                .device
+                .poll(wgpu::PollType::Wait {
+                    submission_index: Some(index),
+                    timeout: None,
+                })
+                .unwrap();
             rx.recv().unwrap().unwrap();
-            
+
             {
                 let data = buffer_slice.get_mapped_range();
                 frame_buffer.copy_from_slice(&data);
             }
-            
+
             staging_buffer.unmap();
         });
 
