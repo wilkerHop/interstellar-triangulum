@@ -2,7 +2,7 @@
 
 **Interstellar Triangulum** is a high-performance, Rust-based video creation engine designed to automate the production of high-quality, data-driven video content. It is built upon the three core pillars of The Digital Artisan philosophy.
 
-![Three Pillars Infographic](file:///Users/wilkerribeiro/.gemini/antigravity/brain/07001e3a-f9ce-41d3-9c23-6a6dc99b73cb/three_pillars_infographic_1764205094252.png)
+![Three Pillars Infographic](three_pillars_infographic_1764205094252.png)
 
 ## The Three Pillars
 
@@ -34,8 +34,8 @@ We integrate verification tools to ensure your content is accurate and reliable.
 | **Video Engine** | ✅ Complete | Core Rust engine, JSON parser, Asset loader |
 | **Rendering** | ✅ Complete | Blender backend with material system & effects |
 | **Audio** | ✅ Complete | Multi-track mixing and synchronization |
-| **Narrative Tools** | 🚧 Planned | Structure validation & retention analysis |
-| **Credibility Tools** | 🚧 Planned | Claim verification & scoring |
+| **Narrative Tools** | ✅ Complete | Structure validation & retention analysis |
+| **Credibility Tools** | ✅ Complete | Claim verification & scoring |
 
 ## Getting Started
 
