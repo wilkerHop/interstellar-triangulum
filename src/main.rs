@@ -190,7 +190,7 @@ fn run_render(
     // Export Report
     if let Some(path) = export_report {
         let path = Path::new(&path);
-        let content = if path.extension().map_or(false, |ext| ext == "json") {
+        let content = if path.extension().is_some_and(|ext| ext == "json") {
             // JSON Export
             serde_json::to_string_pretty(&narrative_report)?
         } else {
