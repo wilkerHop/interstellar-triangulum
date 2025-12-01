@@ -14,10 +14,25 @@ pub struct RetentionWarning {
     pub message: String,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Severity {
+    Info,
+    Warning,
+    Error,
+}
+
+#[derive(Debug, Clone)]
+pub struct StructureRecommendation {
+    pub severity: Severity,
+    pub message: String,
+    pub category: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct NarrativeReport {
     pub structure_valid: bool,
     pub structure_errors: Vec<String>,
+    pub structure_recommendations: Vec<StructureRecommendation>,
     pub pacing_alerts: Vec<PacingAlert>,
     pub retention_warnings: Vec<RetentionWarning>,
     pub score: u32,
@@ -28,6 +43,7 @@ pub struct NarrativeAnalyzer;
 impl NarrativeAnalyzer {
     pub fn analyze(script: &VideoScript) -> NarrativeReport {
         let (structure_valid, structure_errors) = Self::validate_structure(script);
+        let structure_recommendations = Self::analyze_structure_enhancements(script);
         let pacing_alerts = Self::analyze_pacing(script);
         let retention_warnings = Self::analyze_visual_density(script);
 
@@ -37,10 +53,18 @@ impl NarrativeAnalyzer {
         }
         score = score.saturating_sub((pacing_alerts.len() * 10) as i32);
         score = score.saturating_sub((retention_warnings.len() * 5) as i32);
+        score = score.saturating_sub(
+            (structure_recommendations
+                .iter()
+                .filter(|r| r.severity == Severity::Warning)
+                .count()
+                * 3) as i32,
+        );
 
         NarrativeReport {
             structure_valid,
             structure_errors,
+            structure_recommendations,
             pacing_alerts,
             retention_warnings,
             score: score.max(0) as u32,
@@ -72,6 +96,116 @@ impl NarrativeAnalyzer {
         }
 
         (errors.is_empty(), errors)
+    }
+
+    fn analyze_structure_enhancements(script: &VideoScript) -> Vec<StructureRecommendation> {
+        let mut recommendations = Vec::new();
+
+        if script.scenes.is_empty() {
+            return recommendations;
+        }
+
+        // 1. Scene Order Validation
+        if !script.scenes.is_empty() {
+            if script.scenes[0].scene_type != SceneType::Hook {
+                recommendations.push(StructureRecommendation {
+                    severity: Severity::Error,
+                    category: "Scene Order".to_string(),
+                    message: "First scene should be a Hook to grab attention".to_string(),
+                });
+            }
+
+            if script.scenes.last().unwrap().scene_type != SceneType::Payoff {
+                recommendations.push(StructureRecommendation {
+                    severity: Severity::Warning,
+                    category: "Scene Order".to_string(),
+                    message: "Last scene should be a Payoff to drive action".to_string(),
+                });
+            }
+        }
+
+        // 2. Duration Balance (Hook <15%, Payoff >10%)
+        let total_duration: f32 = script.scenes.iter().map(|s| s.duration).sum();
+
+        if total_duration > 0.0 {
+            let hook_duration: f32 = script
+                .scenes
+                .iter()
+                .filter(|s| s.scene_type == SceneType::Hook)
+                .map(|s| s.duration)
+                .sum();
+
+            let payoff_duration: f32 = script
+                .scenes
+                .iter()
+                .filter(|s| s.scene_type == SceneType::Payoff)
+                .map(|s| s.duration)
+                .sum();
+
+            let hook_percent = (hook_duration / total_duration) * 100.0;
+            let payoff_percent = (payoff_duration / total_duration) * 100.0;
+
+            if hook_percent > 15.0 {
+                recommendations.push(StructureRecommendation {
+                    severity: Severity::Warning,
+                    category: "Duration Balance".to_string(),
+                    message: format!(
+                        "Hook is too long ({:.1}% of video). Keep it under 15% for best retention.",
+                        hook_percent
+                    ),
+                });
+            }
+
+            if payoff_percent < 10.0 && payoff_percent > 0.0 {
+                recommendations.push(StructureRecommendation {
+                    severity: Severity::Info,
+                    category: "Duration Balance".to_string(),
+                    message: format!(
+                        "Payoff is short ({:.1}% of video). Consider expanding to 10%+ for stronger CTA.",
+                        payoff_percent
+                    ),
+                });
+            }
+        }
+
+        // 3. Scene Count Recommendations
+        let scene_count = script.scenes.len();
+        if scene_count < 3 {
+            recommendations.push(StructureRecommendation {
+                severity: Severity::Warning,
+                category: "Scene Count".to_string(),
+                message: format!(
+                    "Only {} scene(s) detected. Videos with 3-7 scenes typically perform better.",
+                    scene_count
+                ),
+            });
+        } else if scene_count > 7 {
+            recommendations.push(StructureRecommendation {
+                severity: Severity::Info,
+                category: "Scene Count".to_string(),
+                message: format!(
+                    "{} scenes detected. Consider consolidating for better pacing (optimal: 3-7).",
+                    scene_count
+                ),
+            });
+        }
+
+        // 4. Transition Smoothness
+        for i in 0..script.scenes.len().saturating_sub(1) {
+            if script.scenes[i].transition.is_none() && script.scenes[i].duration > 3.0 {
+                recommendations.push(StructureRecommendation {
+                    severity: Severity::Info,
+                    category: "Transitions".to_string(),
+                    message: format!(
+                        "Scene {} → {} has no transition. Consider adding fade/dissolve for smoother flow.",
+                        i + 1,
+                        i + 2
+                    ),
+                });
+            }
+        }
+
+        recommendations
     }
 
     fn analyze_pacing(script: &VideoScript) -> Vec<PacingAlert> {
