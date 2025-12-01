@@ -1,5 +1,7 @@
+pub mod analysis;
 pub mod assets;
 pub mod audio;
+pub mod context;
 pub mod parser;
 pub mod renderer;
 pub mod script;

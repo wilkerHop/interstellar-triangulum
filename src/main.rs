@@ -23,143 +23,54 @@ fn main() -> Result<()> {
         let base_path = example_script.parent().unwrap_or_else(|| Path::new("."));
         let mut loader = AssetLoader::new(base_path);
 
+        // Pillar 2: Narrative (Engaging)
+        interstellar_triangulum::context::narrative::NarrativeContext::run(&script);
+
+        // Pillar 3: Credibility (Trustworthy)
+        interstellar_triangulum::context::credibility::CredibilityContext::run(&script);
+
+        // Pillar 1: Performance (Fast) - Asset Loading & Rendering
         println!("\n🎨 Loading assets...");
+        // Pre-load assets for statistics and validation
         for scene in &script.scenes {
             for layer in &scene.layers {
                 match layer {
                     interstellar_triangulum::script::Layer::Image { source, .. } => {
-                        match loader.load_image(source) {
-                            Ok(img) => println!(
-                                "  ✓ Loaded image: {} ({}x{})",
-                                source.display(),
-                                img.width,
-                                img.height
-                            ),
-                            Err(e) => {
-                                println!("  ✗ Failed to load image {}: {}", source.display(), e)
-                            }
+                        if let Err(e) = loader.load_image(source) {
+                            println!("  ✗ Failed to load image {}: {}", source.display(), e);
+                        } else {
+                            println!("  ✓ Loaded image: {}", source.display());
                         }
                     }
                     interstellar_triangulum::script::Layer::Video { source, .. } => {
-                        match loader.load_video(source) {
-                            Ok(vid) => println!(
-                                "  ✓ Loaded video: {} ({}x{}@{}fps)",
-                                source.display(),
-                                vid.width,
-                                vid.height,
-                                vid.fps
-                            ),
-                            Err(e) => {
-                                println!("  ✗ Failed to load video {}: {}", source.display(), e)
-                            }
+                        if let Err(e) = loader.load_video(source) {
+                            println!("  ✗ Failed to load video {}: {}", source.display(), e);
+                        } else {
+                            println!("  ✓ Loaded video: {}", source.display());
                         }
                     }
                     interstellar_triangulum::script::Layer::Text { font, .. } => {
-                        match loader.load_font(font) {
-                            Ok(_) => println!("  ✓ Loaded font: {}", font.display()),
-                            Err(e) => println!("  ✗ Failed to load font {}: {}", font.display(), e),
+                        if let Err(e) = loader.load_font(font) {
+                            println!("  ✗ Failed to load font {}: {}", font.display(), e);
+                        } else {
+                            println!("  ✓ Loaded font: {}", font.display());
                         }
                     }
                 }
             }
         }
 
-        // Render frames
-        println!("\n🎬 Rendering frames...");
         let output_dir = Path::new("output");
-        if !output_dir.exists() {
-            std::fs::create_dir(output_dir)?;
-        }
-
-        // Check for renderer flag
         let use_blender = args
             .windows(2)
             .any(|w| w[0] == "--renderer" && w[1] == "blender");
 
-        if use_blender {
-            println!("🎨 Using Blender Backend");
-            let renderer = interstellar_triangulum::renderer::BlenderRenderer::new(
-                script.clone(),
-                output_dir.to_path_buf(),
-            );
-            renderer.render()?;
-        } else {
-            println!("🎨 Using Native Engine (CPU/GPU)");
-            let mut engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
-            engine.render(output_dir, &mut loader)?;
-        }
-
-        // Process Audio
-        let mut audio_path_opt = None;
-        if let Some(audio_config) = &script.audio {
-            println!("\n🎵 Processing audio...");
-            let mut mixer = interstellar_triangulum::AudioMixer::new(44100, 2);
-
-            for track in &audio_config.tracks {
-                println!("  Loading track: {}", track.source.display());
-                // Resolve path relative to script
-                let track_path = if track.source.is_absolute() {
-                    track.source.clone()
-                } else {
-                    base_path.join(&track.source)
-                };
-
-                match interstellar_triangulum::AudioDecoder::decode(&track_path) {
-                    Ok((samples, rate, channels)) => {
-                        mixer.add_track(samples, rate, channels, track.start_time, track.volume);
-                    }
-                    Err(e) => println!("  ⚠️  Failed to load audio track: {}", e),
-                }
-            }
-
-            let mixed_audio = mixer.mix(script.metadata.duration);
-            let output_audio = output_dir.join("audio.wav");
-            if let Err(e) = mixer.export(&output_audio, &mixed_audio) {
-                println!("  ⚠️  Failed to export mixed audio: {}", e);
-            } else {
-                println!("  ✓ Mixed audio exported to: {}", output_audio.display());
-                audio_path_opt = Some(output_audio);
-            }
-        }
-
-        // Encode video if FFmpeg is available
-        if interstellar_triangulum::renderer::VideoEncoder::is_available() {
-            let output_video = Path::new("output.mp4");
-            // Blender outputs frame_1.png, Native outputs frame_1.ppm
-            // We need to handle this difference or standardize
-            // For now, BlenderRenderer outputs PNGs, so we need to tell VideoEncoder to look for PNGs?
-            // VideoEncoder::encode takes a pattern.
-
-            let frame_pattern = if use_blender {
-                output_dir.join("frame_%04d.png")
-            } else {
-                output_dir.join("frame_%d.ppm")
-            };
-
-            interstellar_triangulum::renderer::VideoEncoder::encode(
-                frame_pattern.to_str().unwrap(),
-                output_video,
-                script.metadata.fps,
-                script.metadata.resolution.dimensions().0,
-                script.metadata.resolution.dimensions().1,
-                audio_path_opt.as_deref(),
-            )?;
-
-            println!("✨ Video created successfully: {}", output_video.display());
-        } else {
-            println!("⚠️  FFmpeg not found. Skipping video encoding.");
-            println!("   Frames are saved in: {}", output_dir.display());
-            println!("\n💡 To enable video generation, install FFmpeg:");
-            if cfg!(target_os = "macos") {
-                println!("   brew install ffmpeg");
-            } else if cfg!(target_os = "windows") {
-                println!("   choco install ffmpeg");
-            } else if cfg!(target_os = "linux") {
-                println!("   sudo apt-get install ffmpeg");
-            } else {
-                println!("   Install FFmpeg from https://ffmpeg.org/download.html");
-            }
-        }
+        interstellar_triangulum::context::performance::PerformanceContext::run(
+            &script,
+            &mut loader,
+            output_dir,
+            use_blender,
+        )?;
 
         println!("\n📊 Asset Statistics:");
         println!("  {}", loader.stats());

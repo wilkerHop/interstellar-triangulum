@@ -50,6 +50,11 @@ impl AssetLoader {
         }
     }
 
+    /// Get the base path
+    pub fn base_path(&self) -> &Path {
+        &self.base_path
+    }
+
     /// Load an image asset (stub for now)
     pub fn load_image(&mut self, path: &Path) -> Result<&ImageAsset> {
         let full_path = self.resolve_path(path);
