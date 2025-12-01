@@ -36,6 +36,10 @@ enum Commands {
         /// Fail on low narrative score
         #[arg(long)]
         fail_on_low_score: Option<u32>,
+
+        /// Force CPU rendering (disable GPU)
+        #[arg(long)]
+        force_cpu: bool,
     },
 
     /// Validate script without rendering
@@ -102,6 +106,7 @@ fn main() -> Result<()> {
             output,
             export_report,
             fail_on_low_score,
+            force_cpu,
         }) => {
             let renderer_engine = renderer.unwrap_or(config.renderer.engine.clone());
             let output_dir = output
@@ -114,6 +119,7 @@ fn main() -> Result<()> {
                 &output_dir,
                 export_report,
                 fail_on_low_score,
+                force_cpu,
             )?;
         }
         None => {
@@ -166,6 +172,7 @@ fn run_render(
     output_dir: &Path,
     export_report: Option<String>,
     fail_on_low_score: Option<u32>,
+    force_cpu: bool,
 ) -> Result<()> {
     let script_path = Path::new(script_path);
     println!("🎬 Video Engine - Digital Artisan PoC\n");
@@ -257,12 +264,14 @@ fn run_render(
     }
 
     let use_blender = renderer_engine == "blender";
+    let use_gpu = !force_cpu;
 
     interstellar_triangulum::context::performance::PerformanceContext::run(
         &script,
         &mut loader,
         output_dir,
         use_blender,
+        use_gpu,
     )?;
 
     println!("\n📊 Asset Statistics:");

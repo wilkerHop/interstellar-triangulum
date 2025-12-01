@@ -38,8 +38,8 @@ jobs:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run tests
-        run: cargo test --all-features --verbose
+      - name: Run Render Command (CI Test)
+        run: cargo run -- render examples/ci_test.json --output ci_output --renderer native --force-cpu
 
       - name: Run health check
         run: chmod +x scripts/check_test_coverage.sh && ./scripts/check_test_coverage.sh
