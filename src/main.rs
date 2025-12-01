@@ -131,7 +131,7 @@ fn main() -> Result<()> {
             // VideoEncoder::encode takes a pattern.
 
             let frame_pattern = if use_blender {
-                output_dir.join("frame_%d.png")
+                output_dir.join("frame_%04d.png")
             } else {
                 output_dir.join("frame_%d.ppm")
             };

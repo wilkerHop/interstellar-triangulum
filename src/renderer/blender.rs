@@ -60,6 +60,8 @@ impl BlenderRenderer {
         py.push_str("        scene.frame_start = int(args[args.index(\"--start\") + 1])\n");
         py.push_str("    if \"--end\" in args:\n");
         py.push_str("        scene.frame_end = int(args[args.index(\"--end\") + 1])\n");
+        py.push_str("    if \"--output\" in args:\n");
+        py.push_str("        scene.render.filepath = args[args.index(\"--output\") + 1]\n");
         py.push_str("else:\n");
         py.push_str(&format!("    scene.frame_start = {}\n", start_frame));
         py.push_str(&format!("    scene.frame_end = {}\n", end_frame));
@@ -271,7 +273,7 @@ impl BlenderRenderer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::script::{Layer, Metadata, Resolution, Scene};
+    use crate::script::{Metadata, Resolution, Scene};
 
     #[test]
     fn test_generate_python_script() {

@@ -16,6 +16,8 @@ if "--" in argv:
         scene.frame_start = int(args[args.index("--start") + 1])
     if "--end" in args:
         scene.frame_end = int(args[args.index("--end") + 1])
+    if "--output" in args:
+        scene.render.filepath = args[args.index("--output") + 1]
 else:
     scene.frame_start = 0
     scene.frame_end = 600
