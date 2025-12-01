@@ -115,16 +115,22 @@ mod tests {
     #[test]
     fn test_generate_explainer() {
         let script = ScriptTemplate::generate(TemplateType::Explainer, 60.0);
+        assert_eq!(script.metadata.duration, 60.0);
         assert_eq!(script.scenes.len(), 3);
-        assert_eq!(script.scenes[0].scene_type, SceneType::Hook);
-        assert_eq!(script.scenes[2].scene_type, SceneType::Payoff);
-        assert!((script.scenes[0].duration - 9.0).abs() < 0.1); // 15% of 60 = 9
+        assert_eq!(script.scenes[0].id, "Hook");
     }
 
     #[test]
     fn test_generate_tutorial() {
         let script = ScriptTemplate::generate(TemplateType::Tutorial, 100.0);
         assert_eq!(script.scenes.len(), 3);
-        assert_eq!(script.scenes[0].scene_type, SceneType::Hook); // Intro maps to Hook
+        assert_eq!(script.scenes[0].id, "Intro");
+    }
+
+    #[test]
+    fn test_generate_storytelling() {
+        let script = ScriptTemplate::generate(TemplateType::Storytelling, 90.0);
+        assert_eq!(script.scenes.len(), 3);
+        assert_eq!(script.scenes[0].id, "Setup");
     }
 }

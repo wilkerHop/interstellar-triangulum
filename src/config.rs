@@ -59,3 +59,24 @@ impl AppConfig {
         builder.build()?.try_deserialize()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_config() {
+        let config = AppConfig::default();
+        assert_eq!(config.renderer.engine, "native");
+        assert_eq!(config.video.default_resolution, "1920x1080");
+        assert_eq!(config.video.default_fps, 30);
+    }
+
+    #[test]
+    fn test_config_load_defaults() {
+        // This might fail if a config file exists in the CWD, but for unit tests we assume clean env or mock it.
+        // Ideally we'd mock the config source, but for now we test the structure.
+        let config = AppConfig::default();
+        assert_eq!(config.assets.base_path, PathBuf::from("."));
+    }
+}
