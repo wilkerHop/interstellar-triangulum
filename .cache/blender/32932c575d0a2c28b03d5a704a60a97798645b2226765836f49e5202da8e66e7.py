@@ -52,6 +52,44 @@ def create_text_material(name, color):
     mat.blend_method = 'BLEND'
     return mat
 
+def setup_compositor():
+    bpy.context.scene.use_nodes = True
+    tree = bpy.context.scene.node_tree
+    nodes = tree.nodes
+    links = tree.links
+    nodes.clear()
+
+    # Input
+    rl = nodes.new('CompositorNodeRLayers')
+    
+    # Glare (Bloom)
+    glare = nodes.new('CompositorNodeGlare')
+    glare.glare_type = 'FOG_GLOW'
+    glare.quality = 'HIGH'
+    glare.threshold = 0.5
+    glare.size = 7
+    
+    # Lens Distortion (Subtle chromatic aberration)
+    dist = nodes.new('CompositorNodeLensdist')
+    dist.inputs['Dispersion'].default_value = 0.02
+    dist.inputs['Distort'].default_value = 0.0
+    
+    # Output
+    comp = nodes.new('CompositorNodeComposite')
+    
+    links.new(rl.outputs['Image'], glare.inputs['Image'])
+    links.new(glare.outputs['Image'], dist.inputs['Image'])
+    links.new(dist.outputs['Image'], comp.inputs['Image'])
+
+def animate_camera(cam_obj, duration_frames):
+    # Initial state
+    cam_obj.location.z = 10
+    cam_obj.keyframe_insert(data_path="location", frame=0)
+    
+    # End state (subtle zoom out)
+    cam_obj.location.z = 12
+    cam_obj.keyframe_insert(data_path="location", frame=duration_frames)
+
 def keyframe_visibility(obj, start_frame, end_frame):
     # Hide initially
     obj.hide_render = True
@@ -105,6 +143,8 @@ scene.camera = cam_obj
 cam_obj.location = (0, 0, 10)
 cam_data.type = 'ORTHO'
 cam_data.ortho_scale = 10.8
+animate_camera(cam_obj, 600)
+setup_compositor()
 
 # Layer: Image_hook_0
 mat, img_w, img_h = create_image_material('Mat_Image_hook_0', 'assets/background.png')
