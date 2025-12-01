@@ -41,6 +41,65 @@ impl BlenderRenderer {
         py.push_str("# Clear scene\n");
         py.push_str("bpy.ops.wm.read_factory_settings(use_empty=True)\n\n");
 
+        // Helper functions
+        py.push_str(
+            r#"
+def create_image_material(name, image_path):
+    try:
+        img = bpy.data.images.load(image_path)
+    except:
+        print(f"Could not load image: {image_path}")
+        return None, 1.0, 1.0
+
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    shader = nodes.new('ShaderNodeBsdfPrincipled')
+    shader.inputs['Alpha'].default_value = 1.0
+    
+    tex = nodes.new('ShaderNodeTexImage')
+    tex.image = img
+
+    out = nodes.new('ShaderNodeOutputMaterial')
+
+    links.new(tex.outputs['Color'], shader.inputs['Base Color'])
+    links.new(tex.outputs['Alpha'], shader.inputs['Alpha'])
+    links.new(shader.outputs['BSDF'], out.inputs['Surface'])
+    
+    mat.blend_method = 'BLEND'
+    return mat, img.size[0], img.size[1]
+
+def create_text_material(name, color):
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    shader = nodes.new('ShaderNodeBsdfPrincipled')
+    shader.inputs['Base Color'].default_value = color
+    # Add some emission so it pops
+    shader.inputs['Emission Color'].default_value = color
+    shader.inputs['Emission Strength'].default_value = 0.5
+
+    out = nodes.new('ShaderNodeOutputMaterial')
+    links.new(shader.outputs['BSDF'], out.inputs['Surface'])
+    
+    mat.blend_method = 'BLEND'
+    return mat
+
+def to_blender_coords(x, y, res_x, res_y):
+    # Map 0,0 (top-left) to -W/2, H/2
+    # Scale: 100px = 1 unit
+    bx = (x - res_x/2) / 100.0
+    by = (res_y/2 - y) / 100.0
+    return bx, by
+"#,
+        );
+
         // Render settings
         let (width, height) = self.script.metadata.resolution.dimensions();
         py.push_str("scene = bpy.context.scene\n");
@@ -67,6 +126,7 @@ impl BlenderRenderer {
         py.push_str(&format!("    scene.frame_end = {}\n", end_frame));
 
         py.push_str("scene.render.image_settings.file_format = 'PNG'\n");
+        py.push_str("scene.render.image_settings.color_mode = 'RGBA'\n"); // Ensure alpha output
 
         // Camera setup
         py.push_str("\n# Camera setup\n");
@@ -74,12 +134,12 @@ impl BlenderRenderer {
         py.push_str("cam_obj = bpy.data.objects.new(name='Camera', object_data=cam_data)\n");
         py.push_str("scene.collection.objects.link(cam_obj)\n");
         py.push_str("scene.camera = cam_obj\n");
-        py.push_str("cam_obj.location = (0, 0, 10)\n"); // Orthographic setup usually needs specific placement
+        py.push_str("cam_obj.location = (0, 0, 10)\n");
         py.push_str("cam_data.type = 'ORTHO'\n");
         py.push_str(&format!(
             "cam_data.ortho_scale = {}\n",
-            width as f32 / 100.0
-        )); // Adjust scale mapping
+            height as f32 / 100.0 // Match vertical resolution (10.8 units for 1080p)
+        ));
 
         // Process scenes and layers
         let mut _current_frame = 0;
@@ -89,36 +149,86 @@ impl BlenderRenderer {
             for (layer_idx, layer) in scene.layers.iter().enumerate() {
                 match layer {
                     Layer::Image {
-                        source: _source,
-                        transform,
-                        ..
+                        source, transform, ..
                     } => {
                         let name = format!("Image_{}_{}", scene.id, layer_idx);
                         py.push_str(&format!("\n# Layer: {}\n", name));
-                        // In a real implementation, we'd load the image to a plane
-                        // For now, creating a placeholder plane
-                        py.push_str("bpy.ops.mesh.primitive_plane_add(size=1)\n");
-                        py.push_str("obj = bpy.context.active_object\n");
-                        py.push_str(&format!("obj.name = '{}'\n", name));
 
-                        // Apply transform (simplified)
-                        // Blender coords are different, would need mapping
+                        // Resolve absolute path
+                        let abs_path = std::fs::canonicalize(source).unwrap_or(source.clone());
+                        let path_str = abs_path.to_string_lossy().replace("\\", "/"); // Fix Windows paths
+
                         py.push_str(&format!(
-                            "obj.location.x = {}\n",
-                            transform.position.x as f32 / 100.0
+                            "mat, img_w, img_h = create_image_material('Mat_{}', '{}')\n",
+                            name, path_str
                         ));
+
+                        py.push_str("if mat:\n");
+                        py.push_str("    bpy.ops.mesh.primitive_plane_add(size=1)\n");
+                        py.push_str("    obj = bpy.context.active_object\n");
+                        py.push_str(&format!("    obj.name = '{}'\n", name));
+                        py.push_str("    obj.data.materials.append(mat)\n");
+
+                        // Scale to match image dimensions (100px = 1 unit)
+                        py.push_str("    obj.scale.x = img_w / 100.0\n");
+                        py.push_str("    obj.scale.y = img_h / 100.0\n");
+
+                        // Position
                         py.push_str(&format!(
-                            "obj.location.y = {}\n",
-                            transform.position.y as f32 / 100.0
+                            "    bx, by = to_blender_coords({}, {}, {}, {})\n",
+                            transform.position.x, transform.position.y, width, height
                         ));
+                        py.push_str("    obj.location.x = bx\n");
+                        py.push_str("    obj.location.y = by\n");
+
+                        // Apply extra scale
+                        py.push_str(&format!("    obj.scale.x *= {}\n", transform.scale));
+                        py.push_str(&format!("    obj.scale.y *= {}\n", transform.scale));
                     }
-                    Layer::Text { content, .. } => {
+                    Layer::Text {
+                        content,
+                        font,
+                        font_size,
+                        color,
+                        position,
+                        ..
+                    } => {
                         let name = format!("Text_{}_{}", scene.id, layer_idx);
                         py.push_str(&format!("\n# Layer: {}\n", name));
+
                         py.push_str("bpy.ops.object.text_add()\n");
                         py.push_str("obj = bpy.context.active_object\n");
                         py.push_str(&format!("obj.name = '{}'\n", name));
                         py.push_str(&format!("obj.data.body = '{}'\n", content));
+
+                        // Font
+                        let abs_font_path = std::fs::canonicalize(font).unwrap_or(font.clone());
+                        let font_path_str = abs_font_path.to_string_lossy().replace("\\", "/");
+                        py.push_str(&format!("try:\n    fnt = bpy.data.fonts.load('{}')\n    obj.data.font = fnt\nexcept:\n    pass\n", font_path_str));
+
+                        // Size (approximate mapping)
+                        py.push_str(&format!("obj.data.size = {} / 100.0\n", font_size));
+
+                        // Material (Color)
+                        py.push_str(&format!(
+                            "mat = create_text_material('Mat_{}', ({}, {}, {}, {}))\n",
+                            name,
+                            color.r as f32 / 255.0,
+                            color.g as f32 / 255.0,
+                            color.b as f32 / 255.0,
+                            color.a as f32 / 255.0
+                        ));
+                        py.push_str("obj.data.materials.append(mat)\n");
+
+                        // Position
+                        // Text origin is bottom-left usually, might need adjustment.
+                        // For now, using same mapping.
+                        py.push_str(&format!(
+                            "bx, by = to_blender_coords({}, {}, {}, {})\n",
+                            position.x, position.y, width, height
+                        ));
+                        py.push_str("obj.location.x = bx\n");
+                        py.push_str("obj.location.y = by\n");
                     }
                     _ => {}
                 }
