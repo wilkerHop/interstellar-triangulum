@@ -28,8 +28,14 @@ impl CredibilityContext {
             for citation in &cred_report.citations {
                 println!("      - {}", citation);
             }
-        } else if !cred_report.claims.is_empty() {
-            println!("   ⚠️ No citations provided for detected claims.");
+        } else {
+            println!("   ⚠️  No citations provided");
+        }
+
+        println!("\n   ✅ Quality Checklist:");
+        for item in &cred_report.checklist {
+            let icon = if item.passed { "✓" } else { "❌" };
+            println!("      {} [{}] {}", icon, item.category, item.message);
         }
     }
 }

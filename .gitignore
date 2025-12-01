@@ -2,3 +2,5 @@
 /output
 **/*.rs.bk
 .cache/
+report.json
+report.md
