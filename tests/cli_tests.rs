@@ -43,11 +43,12 @@ fn test_cli_render_simple() {
 
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_interstellar-triangulum"));
     cmd.arg("render")
-        .arg("examples/simple.json")
+        .arg("tests/test_config.json")
         .arg("--output")
         .arg("tests/output_test")
         .arg("--renderer")
         .arg("native")
+        .arg("--force-cpu")
         .assert()
         .success()
         .stdout(predicate::str::contains("Video created successfully"));
