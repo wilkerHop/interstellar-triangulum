@@ -104,8 +104,10 @@ fn main() -> Result<()> {
             fail_on_low_score,
         }) => {
             let renderer_engine = renderer.unwrap_or(config.renderer.engine.clone());
-            let output_dir = output.map(std::path::PathBuf::from).unwrap_or(config.renderer.output_dir.clone());
-            
+            let output_dir = output
+                .map(std::path::PathBuf::from)
+                .unwrap_or(config.renderer.output_dir.clone());
+
             run_render(
                 &script,
                 &renderer_engine,
@@ -136,8 +138,10 @@ fn run_validation(script_path: &str, fail_on_warnings: bool) -> Result<()> {
     println!("{}", ScriptParser::summarize(&script));
 
     // Run Analysis
-    let narrative_report = interstellar_triangulum::context::narrative::NarrativeContext::run(&script);
-    let credibility_report = interstellar_triangulum::context::credibility::CredibilityContext::run(&script);
+    let narrative_report =
+        interstellar_triangulum::context::narrative::NarrativeContext::run(&script);
+    let credibility_report =
+        interstellar_triangulum::context::credibility::CredibilityContext::run(&script);
 
     if fail_on_warnings {
         let has_warnings = !narrative_report.structure_valid
@@ -177,7 +181,8 @@ fn run_render(
     let mut loader = AssetLoader::new(base_path);
 
     // Pillar 2: Narrative (Engaging)
-    let narrative_report = interstellar_triangulum::context::narrative::NarrativeContext::run(&script);
+    let narrative_report =
+        interstellar_triangulum::context::narrative::NarrativeContext::run(&script);
 
     // Pillar 3: Credibility (Trustworthy)
     interstellar_triangulum::context::credibility::CredibilityContext::run(&script);
@@ -198,7 +203,10 @@ fn run_render(
             );
 
             for rec in &narrative_report.structure_recommendations {
-                md.push_str(&format!("- **[{:?}]** {}: {}\n", rec.severity, rec.category, rec.message));
+                md.push_str(&format!(
+                    "- **[{:?}]** {}: {}\n",
+                    rec.severity, rec.category, rec.message
+                ));
             }
             md
         };
