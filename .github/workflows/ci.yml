@@ -109,6 +109,16 @@ jobs:
       - name: Build
         run: cargo build --release --verbose
 
+      - name: Cache Render Output
+        uses: actions/cache@v3
+        with:
+          path: |
+            .cache
+            output
+          key: render-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            render-cache-${{ runner.os }}-
+
       - name: Run Engine (Generate Video)
         shell: bash
         run: |
