@@ -124,6 +124,16 @@ fn main() -> Result<()> {
         } else {
             println!("⚠️  FFmpeg not found. Skipping video encoding.");
             println!("   Frames are saved in: {}", output_dir.display());
+            println!("\n💡 To enable video generation, install FFmpeg:");
+            if cfg!(target_os = "macos") {
+                println!("   brew install ffmpeg");
+            } else if cfg!(target_os = "windows") {
+                println!("   choco install ffmpeg");
+            } else if cfg!(target_os = "linux") {
+                println!("   sudo apt-get install ffmpeg");
+            } else {
+                println!("   Install FFmpeg from https://ffmpeg.org/download.html");
+            }
         }
 
         println!("\n📊 Asset Statistics:");
