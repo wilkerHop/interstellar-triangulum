@@ -136,7 +136,7 @@ jobs:
                 "duration": 2.0,
                 "layers": [
                   {
-                    "type": "Text",
+                    "type": "text",
                     "content": "CI Test",
                     "font_size": 48.0,
                     "position": { "x": 100, "y": 100 }
