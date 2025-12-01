@@ -4,38 +4,70 @@
     "resolution": "1920x1080",
     "fps": 60,
     "duration": 10.0,
+    "citations": [
+        "Rust Performance Benchmarks 2024",
+        "Viewer Retention Studies by YouTube"
+    ],
     "description": "A simple demonstration of the video engine based on The Digital Artisan's three pillars"
   },
   "scenes": [
     {
       "id": "hook",
       "duration": 3.0,
+      "scene_type": "hook",
       "layers": [
         {
           "type": "image",
           "source": "assets/background.png",
           "transform": {
-            "position": { "x": 0, "y": 0 },
-            "scale": 1.0,
-            "opacity": 1.0
+            "scale": 1.2
           }
         },
         {
           "type": "text",
           "content": "The Digital Artisan",
           "font": "assets/font.ttf",
-          "font_size": 72.0,
-          "color": { "r": 255, "g": 255, "b": 255, "a": 255 },
-          "position": { "x": 960, "y": 440 },
-          "effects": ["fade_in"]
+          "font_size": 72,
+          "color": { "r": 255, "g": 255, "b": 255 },
+          "position": { "x": 960, "y": 440 }
         },
         {
           "type": "text",
           "content": "Building Videos with Rust",
           "font": "assets/font.ttf",
-          "font_size": 48.0,
-          "color": { "r": 200, "g": 200, "b": 200, "a": 255 },
+          "font_size": 48,
+          "color": { "r": 200, "g": 200, "b": 200 },
           "position": { "x": 960, "y": 600 }
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "duration": 5.0,
+      "scene_type": "body",
+      "layers": [
+        {
+          "type": "image",
+          "source": "assets/pipeline.png",
+          "transform": {
+            "scale": 0.8
+          }
+        },
+        {
+          "type": "text",
+          "content": "The Rendering Pipeline",
+          "font": "assets/font.ttf",
+          "font_size": 56,
+          "color": { "r": 74, "g": 158, "b": 255 },
+          "position": { "x": 960, "y": 100 }
+        },
+        {
+          "type": "text",
+          "content": "Rust is 10x faster",
+          "font": "assets/font.ttf",
+          "font_size": 56,
+          "color": { "r": 74, "g": 158, "b": 255 },
+          "position": { "x": 960, "y": 200 }
         }
       ],
       "transition": {
@@ -43,44 +75,24 @@
       }
     },
     {
-      "id": "bridge",
-      "duration": 5.0,
-      "layers": [
-        {
-          "type": "image",
-          "source": "assets/pipeline.png",
-          "transform": {
-            "position": { "x": 0, "y": 0 },
-            "scale": 1.0,
-            "opacity": 1.0
-          }
-        },
-        {
-          "type": "text",
-          "content": "The Rendering Pipeline",
-          "font": "assets/font.ttf",
-          "font_size": 56.0,
-          "color": { "r": 74, "g": 158, "b": 255, "a": 255 },
-          "position": { "x": 960, "y": 100 }
-        }
-      ]
-    },
-    {
       "id": "payoff",
       "duration": 2.0,
+      "scene_type": "payoff",
       "layers": [
         {
           "type": "image",
-          "source": "assets/result.png"
+          "source": "assets/result.png",
+          "transform": {
+            "scale": 0.9
+          }
         },
         {
           "type": "text",
           "content": "Fast. Engaging. Trustworthy.",
           "font": "assets/font.ttf",
-          "font_size": 64.0,
-          "color": { "r": 38, "g": 222, "b": 129, "a": 255 },
-          "position": { "x": 960, "y": 900 },
-          "effects": ["fade_in"]
+          "font_size": 64,
+          "color": { "r": 38, "g": 222, "b": 129 },
+          "position": { "x": 960, "y": 900 }
         }
       ]
     }

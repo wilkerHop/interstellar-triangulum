@@ -104,11 +104,13 @@ mod tests {
                 fps: 30,
                 duration: 10.0,
                 description: None,
+                citations: vec![],
             },
             scenes: vec![
                 Scene {
                     id: "scene1".into(),
                     duration: 5.0,
+                    scene_type: Default::default(),
                     layers: vec![Layer::Image {
                         source: PathBuf::from("test.png"),
                         effects: vec![],
@@ -119,6 +121,7 @@ mod tests {
                 Scene {
                     id: "scene2".into(),
                     duration: 5.0,
+                    scene_type: Default::default(),
                     layers: vec![Layer::Image {
                         source: PathBuf::from("test2.png"),
                         effects: vec![],

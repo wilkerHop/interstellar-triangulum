@@ -19,6 +19,8 @@ pub struct Metadata {
     pub duration: f32,
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
+    pub citations: Vec<String>,
 }
 
 /// Video resolution
@@ -52,9 +54,21 @@ impl Resolution {
 pub struct Scene {
     pub id: String,
     pub duration: f32,
+    #[serde(default)]
+    pub scene_type: SceneType,
     pub layers: Vec<Layer>,
     #[serde(default)]
     pub transition: Option<Transition>,
+}
+
+/// Type of scene for narrative structure
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum SceneType {
+    #[default]
+    Body,
+    Hook,
+    Payoff,
 }
 
 /// A layer within a scene (can be video, image, text, etc.)

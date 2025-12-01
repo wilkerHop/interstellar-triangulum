@@ -165,7 +165,7 @@ mod tests {
     fn test_render_engine_creation() {
         let script = create_test_script();
         let engine = RenderEngine::new(script);
-        assert_eq!(engine.timeline().total_frames(), 300);
+        assert_eq!(engine.timeline().total_frames(), 600);
     }
 
     fn create_test_script() -> VideoScript {
@@ -173,13 +173,15 @@ mod tests {
             metadata: Metadata {
                 title: "Test".into(),
                 resolution: Resolution::Named("1920x1080".into()),
-                fps: 30,
+                fps: 60,
                 duration: 10.0,
                 description: None,
+                citations: vec![],
             },
             scenes: vec![Scene {
-                id: "scene1".into(),
-                duration: 10.0,
+                id: "test".into(),
+                duration: 5.0,
+                scene_type: Default::default(),
                 layers: vec![Layer::Image {
                     source: PathBuf::from("test.png"),
                     effects: vec![],
@@ -197,7 +199,7 @@ mod tests {
         let engine = RenderEngine::new(script);
 
         // Engine should be created successfully regardless of GPU availability
-        assert_eq!(engine.timeline().total_frames(), 300);
+        assert_eq!(engine.timeline().total_frames(), 600);
 
         // GPU renderer field exists (even if None)
         // This test verifies the integration compiles and runs
