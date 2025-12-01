@@ -7,6 +7,7 @@ fn main() -> Result<()> {
 
     // Parse script file from args or use default
     let args: Vec<String> = std::env::args().collect();
+    println!("DEBUG: Args: {:?}", args);
     let default_path = "examples/simple.json".to_string();
     let script_path = args.get(1).unwrap_or(&default_path);
     let example_script = Path::new(script_path);
@@ -70,8 +71,18 @@ fn main() -> Result<()> {
             std::fs::create_dir(output_dir)?;
         }
 
-        let mut engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
-        engine.render(output_dir, &mut loader)?;
+        // Check for renderer flag
+        let use_blender = args.windows(2).any(|w| w[0] == "--renderer" && w[1] == "blender");
+
+        if use_blender {
+            println!("🎨 Using Blender Backend");
+            let renderer = interstellar_triangulum::renderer::BlenderRenderer::new(script.clone(), output_dir.to_path_buf());
+            renderer.render()?;
+        } else {
+            println!("🎨 Using Native Engine (CPU/GPU)");
+            let mut engine = interstellar_triangulum::renderer::RenderEngine::new(script.clone());
+            engine.render(output_dir, &mut loader)?;
+        }
 
         // Process Audio
         let mut audio_path_opt = None;
@@ -109,7 +120,16 @@ fn main() -> Result<()> {
         // Encode video if FFmpeg is available
         if interstellar_triangulum::renderer::VideoEncoder::is_available() {
             let output_video = Path::new("output.mp4");
-            let frame_pattern = output_dir.join("frame_%d.ppm");
+            // Blender outputs frame_1.png, Native outputs frame_1.ppm
+            // We need to handle this difference or standardize
+            // For now, BlenderRenderer outputs PNGs, so we need to tell VideoEncoder to look for PNGs?
+            // VideoEncoder::encode takes a pattern.
+            
+            let frame_pattern = if use_blender {
+                output_dir.join("frame_%d.png")
+            } else {
+                output_dir.join("frame_%d.ppm")
+            };
 
             interstellar_triangulum::renderer::VideoEncoder::encode(
                 frame_pattern.to_str().unwrap(),

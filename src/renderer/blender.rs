@@ -7,7 +7,8 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant};
+use sysinfo::System;
 
 pub struct BlenderRenderer {
     script: VideoScript,
@@ -19,7 +20,7 @@ pub struct BlenderRenderer {
 impl BlenderRenderer {
     pub fn new(script: VideoScript, output_dir: PathBuf) -> Self {
         let cache_dir = PathBuf::from(".cache/blender");
-        let parallel_jobs = num_cpus::get().max(1);
+        let parallel_jobs = std::cmp::min(num_cpus::get(), 2).max(1);
         Self {
             script,
             output_dir,
@@ -42,7 +43,7 @@ impl BlenderRenderer {
 
         // Render settings
         let (width, height) = self.script.metadata.resolution.dimensions();
-        py.push_str(&format!("scene = bpy.context.scene\n"));
+        py.push_str("scene = bpy.context.scene\n");
         py.push_str(&format!("scene.render.resolution_x = {}\n", width));
         py.push_str(&format!("scene.render.resolution_y = {}\n", height));
         py.push_str(&format!(
@@ -95,7 +96,7 @@ impl BlenderRenderer {
                         // In a real implementation, we'd load the image to a plane
                         // For now, creating a placeholder plane
                         py.push_str("bpy.ops.mesh.primitive_plane_add(size=1)\n");
-                        py.push_str(&format!("obj = bpy.context.active_object\n"));
+                        py.push_str("obj = bpy.context.active_object\n");
                         py.push_str(&format!("obj.name = '{}'\n", name));
 
                         // Apply transform (simplified)
@@ -113,7 +114,7 @@ impl BlenderRenderer {
                         let name = format!("Text_{}_{}", scene.id, layer_idx);
                         py.push_str(&format!("\n# Layer: {}\n", name));
                         py.push_str("bpy.ops.object.text_add()\n");
-                        py.push_str(&format!("obj = bpy.context.active_object\n"));
+                        py.push_str("obj = bpy.context.active_object\n");
                         py.push_str(&format!("obj.name = '{}'\n", name));
                         py.push_str(&format!("obj.data.body = '{}'\n", content));
                     }
@@ -122,6 +123,9 @@ impl BlenderRenderer {
             }
             _current_frame += scene_duration_frames;
         }
+
+        py.push_str("\n# Render animation\n");
+        py.push_str("bpy.ops.render.render(animation=True)\n");
 
         py
     }
@@ -169,6 +173,24 @@ impl BlenderRenderer {
         let completed_frames = Arc::new(Mutex::new(0));
         let start_time = Instant::now();
 
+        // Safety Vault: Memory Monitor
+        let _monitor_handle = thread::spawn(|| {
+            let mut sys = System::new_all();
+            loop {
+                sys.refresh_memory();
+                let used_memory = sys.used_memory();
+                let total_memory = sys.total_memory();
+                let usage_percent = (used_memory as f64 / total_memory as f64) * 100.0;
+
+                if usage_percent > 99.0 {
+                    eprintln!("🚨 CRITICAL: Memory usage at {:.1}%! Killing process to prevent crash.", usage_percent);
+                    std::process::exit(1);
+                }
+                
+                thread::sleep(Duration::from_secs(1));
+            }
+        });
+
         for i in 0..self.parallel_jobs {
             let start = i as u32 * frames_per_job;
             let end = ((i + 1) as u32 * frames_per_job).min(total_frames);
@@ -201,12 +223,10 @@ impl BlenderRenderer {
                 // Monitor progress
                 if let Some(stdout) = child.stdout.take() {
                     let reader = BufReader::new(stdout);
-                    for line in reader.lines() {
-                        if let Ok(l) = line {
-                            if l.contains("Saved:") {
-                                let mut count = completed.lock().unwrap();
-                                *count += 1;
-                            }
+                    for line in reader.lines().map_while(Result::ok) {
+                        if line.contains("Saved:") {
+                            let mut count = completed.lock().unwrap();
+                            *count += 1;
                         }
                     }
                 }
