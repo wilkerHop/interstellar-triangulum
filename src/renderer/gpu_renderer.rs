@@ -172,6 +172,7 @@ impl GpuRenderer {
 
     /// Flush accumulated vertices to GPU and render to frame buffer
     pub fn flush(&self, frame_buffer: &mut FrameBuffer) -> Result<()> {
+        let start_time = std::time::Instant::now();
         let mut vertices = self.vertices.borrow_mut();
         if vertices.is_empty() {
             return Ok(());
@@ -301,6 +302,9 @@ impl GpuRenderer {
 
         // Clear vertices for next frame
         vertices.clear();
+
+        let duration = start_time.elapsed();
+        println!("GPU Flush: {:.3}ms", duration.as_secs_f64() * 1000.0);
 
         Ok(())
     }
