@@ -134,7 +134,14 @@ jobs:
               {
                 "id": "scene1",
                 "duration": 2.0,
-                "layers": []
+                "layers": [
+                  {
+                    "type": "Text",
+                    "content": "CI Test",
+                    "font_size": 48.0,
+                    "position": { "x": 100, "y": 100 }
+                  }
+                ]
               }
             ]
           }' > examples/ci_test.json
