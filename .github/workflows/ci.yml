@@ -62,6 +62,7 @@ jobs:
                     "content": "CI Test",
                     "font": "assets/font.ttf",
                     "font_size": 48.0,
+                    "color": { "r": 255, "g": 255, "b": 255 },
                     "position": { "x": 100, "y": 100 }
                   }
                 ]
@@ -176,6 +177,7 @@ jobs:
                     "content": "CI Test",
                     "font": "assets/font.ttf",
                     "font_size": 48.0,
+                    "color": { "r": 255, "g": 255, "b": 255 },
                     "position": { "x": 100, "y": 100 }
                   }
                 ]
