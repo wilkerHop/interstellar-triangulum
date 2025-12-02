@@ -22,6 +22,9 @@ jobs:
       with:
         components: clippy, rustfmt
 
+    - name: Install Dependencies
+      run: brew install ffmpeg
+
     - name: Cache Cargo dependencies
       uses: actions/cache@v3
       with:
