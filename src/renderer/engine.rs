@@ -11,7 +11,8 @@ pub struct RenderEngine {
     frame_buffer: FrameBuffer,
     #[allow(dead_code)]
     gpu_renderer: Option<GpuRenderer>,
-    texture_cache: std::collections::HashMap<std::path::PathBuf, (std::sync::Arc<wgpu::BindGroup>, u32, u32)>,
+    texture_cache:
+        std::collections::HashMap<std::path::PathBuf, (std::sync::Arc<wgpu::BindGroup>, u32, u32)>,
 }
 
 impl RenderEngine {
@@ -88,7 +89,9 @@ impl RenderEngine {
     /// Render a single layer
     fn render_layer(&mut self, layer: &Layer, asset_loader: &AssetLoader) -> Result<()> {
         match layer {
-            Layer::Image { source, transform, .. } => {
+            Layer::Image {
+                source, transform, ..
+            } => {
                 let (x, y) = Compositor::apply_transform(0, 0, transform);
                 let color = [255, 255, 255, 255];
 
@@ -107,9 +110,13 @@ impl RenderEngine {
                             if let Ok(img) = image::open(&full_path) {
                                 let dims = img.dimensions();
                                 let bind_group = gpu.create_texture(&img);
-                                self.texture_cache.insert(source.clone(), (bind_group, dims.0, dims.1));
+                                self.texture_cache
+                                    .insert(source.clone(), (bind_group, dims.0, dims.1));
                             } else {
-                                println!("Failed to load image for texture: {}", full_path.display());
+                                println!(
+                                    "Failed to load image for texture: {}",
+                                    full_path.display()
+                                );
                             }
                         }
                     }
@@ -123,10 +130,24 @@ impl RenderEngine {
                         gpu.draw_texture(bind_group.clone(), x, y, draw_w, draw_h, color)?;
                     } else {
                         // Fallback to colored rect if texture failed
-                         gpu.fill_rect(&mut self.frame_buffer, x, y, 100, 100, [100, 100, 200, 255])?;
+                        gpu.fill_rect(
+                            &mut self.frame_buffer,
+                            x,
+                            y,
+                            100,
+                            100,
+                            [100, 100, 200, 255],
+                        )?;
                     }
                 } else {
-                    Compositor::fill_rect(&mut self.frame_buffer, x, y, 100, 100, [100, 100, 200, 255]);
+                    Compositor::fill_rect(
+                        &mut self.frame_buffer,
+                        x,
+                        y,
+                        100,
+                        100,
+                        [100, 100, 200, 255],
+                    );
                 }
             }
             Layer::Video { transform, .. } => {

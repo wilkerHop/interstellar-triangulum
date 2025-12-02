@@ -1,7 +1,7 @@
 use anyhow::Result;
 use bytemuck::{Pod, Zeroable};
-use wgpu;
 use image::GenericImageView;
+use wgpu;
 
 use crate::renderer::{FrameBuffer, GpuContext};
 
@@ -177,20 +177,23 @@ impl GpuRenderer {
             ..Default::default()
         });
 
-        let white_texture_bind_group = context.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&white_texture_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&white_sampler),
-                },
-            ],
-            label: Some("White Texture Bind Group"),
-        });
+        let white_texture_bind_group =
+            context
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    layout: &texture_bind_group_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::TextureView(&white_texture_view),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: wgpu::BindingResource::Sampler(&white_sampler),
+                        },
+                    ],
+                    label: Some("White Texture Bind Group"),
+                });
 
         // Create initial vertex buffer (large enough for many quads)
         let vertex_buffer = context.device.create_buffer(&wgpu::BufferDescriptor {
@@ -214,8 +217,6 @@ impl GpuRenderer {
         })
     }
 
-
-
     /// Create a texture from an image
     pub fn create_texture(&self, image: &image::DynamicImage) -> std::sync::Arc<wgpu::BindGroup> {
         let rgba = image.to_rgba8();
@@ -227,16 +228,19 @@ impl GpuRenderer {
             depth_or_array_layers: 1,
         };
 
-        let texture = self.context.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Image Texture"),
-            size,
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-            view_formats: &[],
-        });
+        let texture = self
+            .context
+            .device
+            .create_texture(&wgpu::TextureDescriptor {
+                label: Some("Image Texture"),
+                size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
+            });
 
         self.context.queue.write_texture(
             wgpu::TexelCopyTextureInfo {
@@ -255,30 +259,37 @@ impl GpuRenderer {
         );
 
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let sampler = self.context.device.create_sampler(&wgpu::SamplerDescriptor {
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Nearest,
-            ..Default::default()
-        });
+        let sampler = self
+            .context
+            .device
+            .create_sampler(&wgpu::SamplerDescriptor {
+                address_mode_u: wgpu::AddressMode::ClampToEdge,
+                address_mode_v: wgpu::AddressMode::ClampToEdge,
+                address_mode_w: wgpu::AddressMode::ClampToEdge,
+                mag_filter: wgpu::FilterMode::Linear,
+                min_filter: wgpu::FilterMode::Linear,
+                mipmap_filter: wgpu::FilterMode::Nearest,
+                ..Default::default()
+            });
 
-        std::sync::Arc::new(self.context.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &self.texture_bind_group_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&sampler),
-                },
-            ],
-            label: Some("Image Texture Bind Group"),
-        }))
+        std::sync::Arc::new(
+            self.context
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    layout: &self.texture_bind_group_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::TextureView(&view),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: wgpu::BindingResource::Sampler(&sampler),
+                        },
+                    ],
+                    label: Some("Image Texture Bind Group"),
+                }),
+        )
     }
 
     /// Draw a textured rectangle
@@ -339,7 +350,7 @@ impl GpuRenderer {
         ];
 
         let mut batches = self.batches.borrow_mut();
-        
+
         // Check if we can merge with the last batch
         if let Some(last_batch) = batches.last_mut() {
             if std::sync::Arc::ptr_eq(&last_batch.0, &bind_group) {
@@ -420,11 +431,9 @@ impl GpuRenderer {
         let mut current_offset = 0;
         for (_, vertices) in batches.iter() {
             let bytes = bytemuck::cast_slice(vertices);
-            self.context.queue.write_buffer(
-                &self.vertex_buffer,
-                current_offset,
-                bytes,
-            );
+            self.context
+                .queue
+                .write_buffer(&self.vertex_buffer, current_offset, bytes);
             current_offset += bytes.len() as u64;
         }
 
@@ -451,9 +460,13 @@ impl GpuRenderer {
             for (bind_group, vertices) in batches.iter() {
                 let vertex_count = vertices.len() as u32;
                 let byte_size = (vertex_count as usize * std::mem::size_of::<Vertex>()) as u64;
-                
+
                 render_pass.set_bind_group(0, bind_group.as_ref(), &[]);
-                render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(draw_offset..draw_offset + byte_size));
+                render_pass.set_vertex_buffer(
+                    0,
+                    self.vertex_buffer
+                        .slice(draw_offset..draw_offset + byte_size),
+                );
                 render_pass.draw(0..vertex_count, 0..1);
 
                 draw_offset += byte_size;
