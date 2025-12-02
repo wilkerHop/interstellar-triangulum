@@ -7,6 +7,9 @@ use image::GenericImageView;
 use rayon::prelude::*;
 use std::sync::Arc;
 
+/// Cached texture entry: (BindGroup, width, height)
+type TextureCacheEntry = (Arc<wgpu::BindGroup>, u32, u32);
+
 /// Main rendering engine
 pub struct RenderEngine {
     script: VideoScript,
@@ -14,7 +17,7 @@ pub struct RenderEngine {
     frame_buffer: FrameBuffer,
     #[allow(dead_code)]
     gpu_renderer: Option<GpuRenderer>,
-    texture_cache: Arc<DashMap<std::path::PathBuf, (Arc<wgpu::BindGroup>, u32, u32)>>,
+    texture_cache: Arc<DashMap<std::path::PathBuf, TextureCacheEntry>>,
 }
 
 impl RenderEngine {
