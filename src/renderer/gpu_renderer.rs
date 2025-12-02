@@ -5,7 +5,20 @@ use wgpu;
 
 use crate::renderer::{FrameBuffer, GpuContext};
 
-#[repr(C)]
+/// Vertex structure optimized for Metal (Apple Silicon)
+///
+/// Layout:
+/// - position: vec2<f32> (8 bytes, offset 0)
+/// - color: vec4<f32> (16 bytes, offset 8)  
+/// - uv: vec2<f32> (8 bytes, offset 24)
+///
+/// Total: 32 bytes (16-byte aligned for optimal GPU cache performance)
+///
+/// Metal alignment requirements:
+/// - vec2/vec3 should be aligned to their component size
+/// - vec4 should be 16-byte aligned
+/// - Structs should be padded to 16-byte boundaries for best performance
+#[repr(C, align(16))]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
 struct Vertex {
     position: [f32; 2],
